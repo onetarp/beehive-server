@@ -23,7 +23,7 @@ def process_message(ch, method, properties, body):
     # same for each parameter:value pair
     sampleDatetime = datetime.utcfromtimestamp(float(properties.timestamp) / 1000.0)
     # TODO Validate / santize node_id here.
-    node_id = properties.reply_to
+    node_id = properties.reply_to[-12:]
     sampleDate = sampleDatetime.strftime('%Y-%m-%d')
     ingest_id = 0
     meta_id = 0
