@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 
 
-r = requests.get('http://beehive1.mcs.anl.gov/api/1/nodes/')
+r = requests.get('http://beehive1.mcs.anl.gov/api/1/nodes/?all=True')
 
 nodes = []
 
