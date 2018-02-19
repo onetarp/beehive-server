@@ -10,7 +10,7 @@ logger.setLevel(logging.INFO)
 
 logging.basicConfig(level=logging.ERROR)
 
-cluster = Cluster()
+cluster = Cluster(connect_timeout=60, control_connection_timeout=60.0)
 session = cluster.connect('waggle')
 query = 'SELECT timestamp, plugin_name, plugin_version, parameter, data FROM sensor_data_raw WHERE node_id=%s AND date=%s'
 

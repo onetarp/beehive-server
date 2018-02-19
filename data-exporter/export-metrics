@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+from multiprocessing import Pool
+import subprocess
+import json
+
+
+def remote_ssh(hostname):
+    metrics = []
+
+    try:
+        status = json.loads(subprocess.check_output(['ssh', '-C', '-o', 'ConnectTimeout=45', 'root@{}'.format(hostname), 'waggle-status']).decode())
+
+        if 'nodecontroller' in status:
+            metrics.append('up{{node="{}",device="nodecontroller"}} 1'.format(hostname))
+            metrics.append('uptime{{node="{}",device="nodecontroller"}} {}'.format(hostname, status['nodecontroller']['uptime']))
+            metrics.append('cpu_temp{{node="{}",device="nodecontroller"}} {}'.format(hostname, status['nodecontroller']['cpu_temp']))
+        else:
+            metrics.append('up{{node="{}",device="nodecontroller"}} 0'.format(hostname))
+
+        if 'edgeprocessor' in status:
+            metrics.append('up{{node="{}",device="edgeprocessor"}} 1'.format(hostname))
+            metrics.append('uptime{{node="{}",device="edgeprocessor"}} {}'.format(hostname, status['edgeprocessor']['uptime']))
+            metrics.append('cpu_temp{{node="{}",device="edgeprocessor"}} {}'.format(hostname, status['edgeprocessor']['cpu_temp']))
+        else:
+            metrics.append('up{{node="{}",device="edgeprocessor"}} 0'.format(hostname))
+
+        if 'wagman' in status:
+            metrics.append('up{{node="{}",device="wagman"}} 1'.format(hostname))
+            metrics.append('uptime{{node="{}",device="wagman"}} {}'.format(hostname, status['wagman']['uptime']))
+
+            metrics.append('current{{node="{}",device="wagman"}} {}'.format(hostname, status['wagman']['currents']['wagman']))
+            metrics.append('current{{node="{}",device="nodecontroller"}} {}'.format(hostname, status['wagman']['currents']['nc']))
+            metrics.append('current{{node="{}",device="edgeprocessor"}} {}'.format(hostname, status['wagman']['currents']['ep']))
+            metrics.append('current{{node="{}",device="coresense"}} {}'.format(hostname, status['wagman']['currents']['cs']))
+        else:
+            metrics.append('up{{node="{}",device="wagman"}} 0'.format(hostname))
+
+    except Exception as exc:
+        print(exc)
+        metrics.append('up{{node="{}",device="nodecontroller"}} 0'.format(hostname))
+
+    return '\n'.join(metrics)
+
+
+if __name__ == '__main__':
+    hostnames = [
+        'node50210',
+        'node50211',
+        'node50212',
+        'node50214',
+        'node50215',
+        'node50216',
+        'node50217',
+        'node50218',
+        'node50219',
+        'node50220',
+        'node50221',
+        'node50223',
+        'node50224',
+    ]
+
+    with Pool(10) as p:
+        metrics = p.map(remote_ssh, hostnames)
+
+    with open('static/metrics', 'w') as outfile:
+        for line in metrics:
+            print(line, file=outfile)

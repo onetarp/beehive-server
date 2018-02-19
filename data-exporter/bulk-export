@@ -1,0 +1,35 @@
+#!/bin/sh
+
+./list-datasets > datasets.index
+
+for year in $(echo 2017 2016); do
+  (awk "/$year-12/" datasets.index | ./export-decoded-datasets-csv) &
+  (awk "/$year-11/" datasets.index | ./export-decoded-datasets-csv) &
+  (awk "/$year-10/" datasets.index | ./export-decoded-datasets-csv) &
+  (awk "/$year-09/" datasets.index | ./export-decoded-datasets-csv) &
+
+  wait
+
+  ./compress-datasets
+  ./build-index
+
+  (awk "/$year-08/" datasets.index | ./export-decoded-datasets-csv) &
+  (awk "/$year-07/" datasets.index | ./export-decoded-datasets-csv) &
+  (awk "/$year-06/" datasets.index | ./export-decoded-datasets-csv) &
+  (awk "/$year-05/" datasets.index | ./export-decoded-datasets-csv) &
+
+  wait
+
+  ./compress-datasets
+  ./build-index
+
+  (awk "/$year-04/" datasets.index | ./export-decoded-datasets-csv) &
+  (awk "/$year-03/" datasets.index | ./export-decoded-datasets-csv) &
+  (awk "/$year-02/" datasets.index | ./export-decoded-datasets-csv) &
+  (awk "/$year-01/" datasets.index | ./export-decoded-datasets-csv) &
+
+  wait
+
+  ./compress-datasets
+  ./build-index
+done
